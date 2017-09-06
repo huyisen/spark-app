@@ -29,7 +29,6 @@ class RDDKafkaSink[T: ClassTag](@transient private val rdd: RDD[T])
   override def sinkToKafka[K, V](
     producerConfig: Properties,
     transformFunc: (T) => ProducerRecord[K, V],
-    producerPool: Broadcast[GenericObjectPool[KafkaProducer]],
     callback: Option[Callback]
   ): Unit = rdd.foreachPartition(partition => {
     val producer = KafkaProducerCache.getProducer[K, V](producerConfig)

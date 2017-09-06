@@ -27,7 +27,6 @@ abstract class KafkaSink[T: ClassTag] extends Serializable {
   def sinkToKafka[K, V](
     producerConfig: Properties,
     transformFunc: T => ProducerRecord[K, V],
-    producerPool: Broadcast[GenericObjectPool[KafkaProducer]],
     callback: Option[Callback] = None
   )
 }

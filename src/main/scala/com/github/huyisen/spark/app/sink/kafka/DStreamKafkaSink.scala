@@ -28,10 +28,9 @@ class DStreamKafkaSink[T: ClassTag](@transient private val dStream: DStream[T])
   override def sinkToKafka[K, V](
     producerConfig: Properties,
     transformFunc: T => ProducerRecord[K, V],
-    producerPool: Broadcast[GenericObjectPool[KafkaProducer]],
     callback: Option[Callback]
   ): Unit = dStream.foreachRDD(rdd => {
     val rddSink = new RDDKafkaSink[T](rdd)
-    rddSink.sinkToKafka(producerConfig, transformFunc,producerPool, callback)
+    rddSink.sinkToKafka(producerConfig, transformFunc, callback)
   })
 }
