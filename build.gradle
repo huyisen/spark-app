@@ -1,0 +1,93 @@
+group 'com.github.huyisen.spark.app'
+version '0.0.1'
+
+apply plugin: 'java'
+apply plugin: 'scala'
+apply plugin: 'com.github.johnrengelman.shadow'
+apply plugin: 'idea'
+
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.4'
+    }
+}
+
+repositories {
+    mavenLocal()
+    maven { url 'http://maven.aliyun.com/nexus/content/groups/public/' }
+    mavenCentral()
+    maven { url 'http://repo.hortonworks.com/content/groups/public/' }
+}
+
+idea {
+    module {
+        //downloadSources = true
+    }
+}
+
+
+dependencies {
+
+    compile 'org.scala-lang:scala-library:2.10.6'
+    compile 'org.scalatest:scalatest_2.10:3.0.1'
+
+    compile 'org.apache.spark:spark-core_2.10:1.6.0'
+    compile 'org.apache.spark:spark-sql_2.10:1.6.0'
+    compile 'org.apache.spark:spark-mllib_2.10:1.6.0'
+    compile 'org.apache.spark:spark-streaming_2.10:1.6.0'
+    compile 'org.apache.spark:spark-streaming-kafka_2.10:1.6.0'
+    compile 'org.apache.hbase:hbase-server:1.1.2'
+    compile 'org.apache.solr:solr-solrj:5.5.4'
+    compile 'com.alibaba:fastjson:1.2.31'
+    compile 'com.google.code.gson:gson:2.8.0'
+    compile 'com.google.guava:guava:14.0.1'
+    compile 'mysql:mysql-connector-java:5.1.41'
+    compile 'org.apache.commons:commons-pool2:2.3'
+
+//    files('src\\main\\resources\\lib\\ukanalyzer-yu-2.1.4.jar')
+
+    testCompile 'junit:junit:4.12'
+//    testCompile 'org.scala-lang.modules:scala-xml_2.10:3.0.1'
+
+}
+
+//Java compiler settings
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+    sourceCompatibility = '1.8'
+    targetCompatibility = '1.8'
+}
+
+//Scala compiler settings
+tasks.withType(ScalaCompile) {
+    options.encoding = 'UTF-8'
+    sourceCompatibility = '1.8'
+    targetCompatibility = '1.7'
+}
+
+test {
+    testLogging {
+        events 'started', 'passed'
+    }
+}
+
+shadowJar {
+    zip64 true
+    baseName = 'spark-app'
+    classifier = null
+    version = null
+    configurations = [project.configurations.compile]
+    relocate 'com.google.common', 'com.msk.common'
+}
+
+task copyJar(type: Copy, dependsOn: jar) {
+    from configurations.compile, configurations.compileOnly
+    into('build/libs/lib')
+}
+
+task release(type: Copy, dependsOn: [copyJar, shadowJar]) {
+    test.enabled = false
+}
