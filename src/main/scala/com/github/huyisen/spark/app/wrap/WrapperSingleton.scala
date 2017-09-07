@@ -6,12 +6,14 @@ import scala.collection.concurrent.TrieMap
 import scala.reflect.ClassTag
 
 /**
+  * 封装不可序列化的单例对象。
   *
   * <p>Author: huyisen@gmail.com
   * <p>Date: 2017-09-07 00:30
   * <p>Version: 1.0
   */
 class WrapperSingleton[T: ClassTag](constructor: => T) extends AnyRef with Serializable {
+
   val singletonUUID = UUID.randomUUID().toString
 
   @transient private lazy val instance: T = {
@@ -23,11 +25,10 @@ class WrapperSingleton[T: ClassTag](constructor: => T) extends AnyRef with Seria
       }
     }
 
-    WrapperSingleton.singletonPool.get(singletonUUID).get.asInstanceOf[T]
+    WrapperSingleton.singletonPool(singletonUUID).asInstanceOf[T]
   }
 
   def get = instance
-
 }
 
 object WrapperSingleton {

@@ -3,6 +3,7 @@ package com.github.huyisen.spark.app.wrap
 import scala.reflect.ClassTag
 
 /**
+  * 封装不可序列化的对象。
   *
   * <p>Author: huyisen@gmail.com
   * <p>Date: 2017-09-07 00:31

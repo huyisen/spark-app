@@ -2,10 +2,10 @@ package com.github.huyisen.spark.app
 
 import java.util.Properties
 
-import com.github.huyisen.spark.app.pool.{BaseKafkaProducerFactory, KafkaProducer, PooledKafkaProducerFactory}
+import com.github.huyisen.spark.app.pool.{BaseKafkaWorkerFactory, KafkaWorker, PooledKafkaWorkerFactory}
 import com.github.huyisen.spark.app.sink.kafka.DStreamKafkaSink
 import com.github.huyisen.spark.app.source.KafkaSource
-import com.github.huyisen.spark.app.wrap.WrapperVariable
+import com.github.huyisen.spark.app.wrap.WrapperSingleton
 import kafka.serializer.StringDecoder
 import org.apache.commons.pool2.impl.{GenericObjectPool, GenericObjectPoolConfig}
 import org.apache.kafka.clients.producer.ProducerRecord
@@ -23,15 +23,15 @@ class SparkStreaming(args: Array[String]) extends RunTools with Serializable {
   override def run(): Unit = {
 
     val sparkConf = new SparkConf()
-      //      .setMaster("local[3]")
+      .setMaster("local[3]")
       .setAppName(s"SparkStream-[Test]-App")
       .set("spark.streaming.backpressure.enabled", "true")
       .set("spark.streaming.kafka.maxRatePerPartition", "10")
       .set("spark.streaming.stopGracefullyOnShutdown", "true")
 
-    val ssc = new StreamingContext(sparkConf, Seconds(10))
+    val ssc = new StreamingContext(sparkConf, Seconds(5))
 
-    val brokers = "sdst104.urun:6667,sdst105.urun:6667,sdst106.urun:6667"
+    val brokers = "node3.com:6667"
     //"largest" else "smallest"
     val reset = "smallest"
     val groupId = "test"
@@ -47,36 +47,36 @@ class SparkStreaming(args: Array[String]) extends RunTools with Serializable {
     val source = dStream.mapPartitions(partition => {
       partition.map(src => {
         val arr = src._2.split(",")
-        (arr(0).toInt, arr(1), arr(2).toInt)
+        (System.currentTimeMillis(), arr(1).toInt, arr(2), arr(3).toInt)
       })
     })
 
-    val pool = WrapperVariable.apply({
+    val pool = WrapperSingleton.apply({
 
       val props = new Properties()
-      props.put("bootstrap.servers", "sdst104.urun:6667,sdst105.urun:6667,sdst106.urun:6667")
+      props.put("bootstrap.servers", brokers)
       props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer")
       props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer")
 
-      val producerFactory = new BaseKafkaProducerFactory(props, defaultTopic = Option("test"))
-      val pooledProducerFactory = new PooledKafkaProducerFactory(producerFactory)
+      val producerFactory = new BaseKafkaWorkerFactory(props, defaultTopic = Option("test"))
+      val pooledProducerFactory = new PooledKafkaWorkerFactory(producerFactory)
       val poolConfig = {
         val c = new GenericObjectPoolConfig
-        val maxNumProducers = 10
+        val maxNumProducers = 2
         c.setMaxTotal(maxNumProducers)
         c.setMaxIdle(maxNumProducers)
         c
       }
-      new GenericObjectPool[KafkaProducer](pooledProducerFactory, poolConfig)
+      new GenericObjectPool[KafkaWorker](pooledProducerFactory, poolConfig)
     })
 
     val topic = "test"
-    val sink = new DStreamKafkaSink[(Int, String, Int)](source)
-    sink.sinkToKafka(pool, tuple => new ProducerRecord(topic, tuple._1 + "," + tuple._2 + "," + tuple._3))
+    val sink = new DStreamKafkaSink[(Long, Int, String, Int)](source, pool)
+    sink.sinkToKafka(tuple => new ProducerRecord(topic, tuple._1 + "," + tuple._2 + "," + tuple._3 + "," + tuple._4))
 
     source.foreachRDD(rdd => {
       rdd.foreach(t => {
-        println(System.currentTimeMillis() + " -> " + t)
+        println(" -> " + t)
       })
     })
 

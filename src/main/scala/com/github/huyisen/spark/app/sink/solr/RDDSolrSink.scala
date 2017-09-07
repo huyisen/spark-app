@@ -2,7 +2,8 @@ package com.github.huyisen.spark.app.sink.solr
 
 import java.util.Properties
 
-import com.github.huyisen.spark.app.pool.CloudSolrProducer
+import com.github.huyisen.spark.app.pool.SolrWorker
+import com.github.huyisen.spark.app.wrap.WrapperSingleton
 import org.apache.commons.pool2.impl.GenericObjectPool
 import org.apache.solr.common.SolrInputDocument
 import org.apache.spark.broadcast.Broadcast
@@ -18,16 +19,10 @@ import scala.reflect.ClassTag
   */
 class RDDSolrSink[T: ClassTag](
   @transient private val rdd: RDD[T],
-  producerPool: Broadcast[GenericObjectPool[CloudSolrProducer]],
+  private val pool: WrapperSingleton[GenericObjectPool[SolrWorker]],
   fields: Broadcast[Set[String]]
 ) extends SolrSink[T] {
 
-  /**
-    * Sink a DStream or RDD to HBase
-    *
-    * @param solrConf      properties for a SolrClient
-    * @param transformFunc a function used to transform values of T type into [[SolrInputDocument]]s
-    */
   override def sinkToSolr(
     solrConf: Properties,
     transformFunc: (T) => SolrInputDocument
@@ -35,7 +30,7 @@ class RDDSolrSink[T: ClassTag](
 
     //TODO 捕获一样处理
     val batch = solrConf.getProperty("batch", "1000").toInt
-    val client = producerPool.value.borrowObject()
+    val client = pool.get.borrowObject()
     partition
       .map(transformFunc)
       .map(doc => {
@@ -47,7 +42,7 @@ class RDDSolrSink[T: ClassTag](
       .grouped(batch)
       .foreach(docs => client.add(docs))
     client.commit
-    producerPool.value.returnObject(client)
+    pool.get.returnObject(client)
   })
 
 }

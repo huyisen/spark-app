@@ -13,12 +13,12 @@ import org.apache.commons.pool2.impl.{GenericObjectPool, GenericObjectPoolConfig
   */
 object PoolUtils {
 
-  private[app] def createKafkaProducerPool(
+  private[app] def createKafkaWorkerPool(
     config: Properties,
     topic: String
-  ): GenericObjectPool[KafkaProducer] = {
-    val producerFactory = new BaseKafkaProducerFactory(config, defaultTopic = Option(topic))
-    val pooledProducerFactory = new PooledKafkaProducerFactory(producerFactory)
+  ): GenericObjectPool[KafkaWorker] = {
+    val producerFactory = new BaseKafkaWorkerFactory(config, defaultTopic = Option(topic))
+    val pooledProducerFactory = new PooledKafkaWorkerFactory(producerFactory)
     val poolConfig = {
       val c = new GenericObjectPoolConfig
       val maxNumProducers = 10
@@ -26,16 +26,16 @@ object PoolUtils {
       c.setMaxIdle(maxNumProducers)
       c
     }
-    new GenericObjectPool[KafkaProducer](pooledProducerFactory, poolConfig)
+    new GenericObjectPool[KafkaWorker](pooledProducerFactory, poolConfig)
   }
 
-  private[app] def createSolrProducerPool(
+  private[app] def createSolrWorkerPool(
     zkHost: String,
     config: Properties,
     collection: String
-  ): GenericObjectPool[CloudSolrProducer] = {
-    val producerFactory = new BaseCloudSolrProducerFactory(zkHost, config, defaultCollection = Option(collection))
-    val pooledProducerFactory = new PooledSolrProducerFactory(producerFactory)
+  ): GenericObjectPool[SolrWorker] = {
+    val producerFactory = new BaseSolrWorkerFactory(zkHost, config, defaultCollection = Option(collection))
+    val pooledProducerFactory = new PooledSolrWorkerFactory(producerFactory)
     val poolConfig = {
       val c = new GenericObjectPoolConfig
       val maxNumProducers = 10
@@ -43,7 +43,7 @@ object PoolUtils {
       c.setMaxIdle(maxNumProducers)
       c
     }
-    new GenericObjectPool[CloudSolrProducer](pooledProducerFactory, poolConfig)
+    new GenericObjectPool[SolrWorker](pooledProducerFactory, poolConfig)
   }
 
 }

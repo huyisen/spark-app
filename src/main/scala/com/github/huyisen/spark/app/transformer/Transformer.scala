@@ -1,4 +1,4 @@
-package com.github.huyisen.spark.app.transfomer
+package com.github.huyisen.spark.app.transformer
 
 import com.alibaba.fastjson.JSON
 import org.apache.hadoop.hbase.client.Put
@@ -14,7 +14,7 @@ import scala.collection.JavaConverters._
   * <p>Date: 2017-07-13 23:01
   * <p>Version: 1.0
   */
-object Transform {
+object Transformer {
 
 
   val fc = Bytes.toBytes("c")

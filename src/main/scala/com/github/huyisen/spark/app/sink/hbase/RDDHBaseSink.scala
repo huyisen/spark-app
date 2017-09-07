@@ -16,12 +16,6 @@ import scala.reflect.ClassTag
 class RDDHBaseSink[T: ClassTag](@transient private val rdd: RDD[T])
   extends HBaseSink[T] {
 
-  /**
-    * Sink a DStream or RDD to HBase
-    *
-    * @param config        properties for a HBase
-    * @param transformFunc a function used to transform values of T type into [[(ImmutableBytesWritable, Put)]]s
-    */
   override def sinkToHBase(
     config: Configuration,
     transformFunc: (T) => (ImmutableBytesWritable, Put)

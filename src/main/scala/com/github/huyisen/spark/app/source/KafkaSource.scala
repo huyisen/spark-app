@@ -59,7 +59,7 @@ class KafkaSource[K: ClassTag, V: ClassTag, KD <: Decoder[K] : ClassTag, VD <: D
   private[app] def setOrUpdateOffsets(topics: Set[String], groupId: String): Unit = {
     topics.foreach(topic => {
       val partitionsE = kc.getPartitions(Set(topic))
-      if (partitionsE.isLeft) throw new SparkException(s"get kafka partition failed: ${ partitionsE.left.get.mkString("\n") }")
+      if (partitionsE.isLeft) throw new SparkException(s"get kafka partition failed: ${partitionsE.left.get.mkString("\n")}")
       val partitions: Set[TopicAndPartition] = partitionsE.right.get
       val consumerOffsetsE = kc.getConsumerOffsets(groupId, partitions)
       val hasConsumed = if (consumerOffsetsE.isLeft) false else true
@@ -73,7 +73,7 @@ class KafkaSource[K: ClassTag, V: ClassTag, KD <: Decoder[K] : ClassTag, VD <: D
         //这时把consumerOffsets更新为earliestLeaderOffsets
         val earliestLeaderOffsetsE = kc.getEarliestLeaderOffsets(partitions)
         if (earliestLeaderOffsetsE.isLeft)
-          throw new SparkException(s"get earliest offsets failed: ${ earliestLeaderOffsetsE.left.get.mkString("\n") }")
+          throw new SparkException(s"get earliest offsets failed: ${earliestLeaderOffsetsE.left.get.mkString("\n")}")
         val earliestLeaderOffsets = earliestLeaderOffsetsE.right.get
         val consumerOffsets = consumerOffsetsE.right.get
         // 可能只是存在部分分区consumerOffsets过时，所以只更新过时分区的consumerOffsets为earliestLeaderOffsets
@@ -98,7 +98,7 @@ class KafkaSource[K: ClassTag, V: ClassTag, KD <: Decoder[K] : ClassTag, VD <: D
         val leaderOffsets = if (reset == Some("smallest")) kc.getEarliestLeaderOffsets(partitions).right.get
         else kc.getLatestLeaderOffsets(partitions).right.get
 
-        val offsets = leaderOffsets.map{ case (tp, offset) => (tp, offset.offset) }
+        val offsets = leaderOffsets.map { case (tp, offset) => (tp, offset.offset) }
         logger.warn("offsets: " + offsets)
         kc.setConsumerOffsets(groupId, offsets)
       }
@@ -118,7 +118,7 @@ class KafkaSource[K: ClassTag, V: ClassTag, KD <: Decoder[K] : ClassTag, VD <: D
       val topicAndPartition = TopicAndPartition(offsets.topic, offsets.partition)
       val o = kc.setConsumerOffsets(groupId, Map((topicAndPartition, offsets.untilOffset)))
       if (o.isLeft) {
-        logger.error(s"Error updating the offset to Kafka cluster: ${ o.left.get }")
+        logger.error(s"Error updating the offset to Kafka cluster: ${o.left.get}")
       }
     }
   }

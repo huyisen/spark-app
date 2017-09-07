@@ -2,9 +2,9 @@ package com.github.huyisen.spark.app
 
 import java.util.Properties
 
-import com.github.huyisen.spark.app.pool.{BaseKafkaProducerFactory, KafkaProducer, PooledKafkaProducerFactory}
+import com.github.huyisen.spark.app.pool.{BaseKafkaWorkerFactory, KafkaWorker, PooledKafkaWorkerFactory}
 import com.github.huyisen.spark.app.sink.kafka.RDDKafkaSink
-import com.github.huyisen.spark.app.wrap.WrapperVariable
+import com.github.huyisen.spark.app.wrap.WrapperSingleton
 import org.apache.commons.pool2.impl.{GenericObjectPool, GenericObjectPoolConfig}
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.spark.{SparkConf, SparkContext}
@@ -31,31 +31,32 @@ class SparkCore(args: Array[String]) extends RunTools with Serializable {
 
     val sc = new SparkContext(sparkConf)
 
-    val source = sc.parallelize(Array((1, "李四", 18), (2, "张三", 19), (3, "tom", 16), (4, "jetty", 25), (5, "msk", 28), (6, "tina", 10)), 3)
+    val time = System.currentTimeMillis()
+    val source = sc.parallelize(Array((time, 1, "李四", 18), (time, 2, "张三", 19), (time, 3, "tom", 16), (time, 4, "jetty", 25), (time, 5, "msk", 28), (time, 6, "tina", 10)), 3)
 
+    val brokers = "node3.com:6667"
 
-    val pool = WrapperVariable.apply({
-
+    val pool = WrapperSingleton.apply({
       val props = new Properties()
-      props.put("bootstrap.servers", "sdst104.urun:6667,sdst105.urun:6667,sdst106.urun:6667")
+      props.put("bootstrap.servers", brokers)
       props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer")
       props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer")
 
-      val producerFactory = new BaseKafkaProducerFactory(props, defaultTopic = Option("test"))
-      val pooledProducerFactory = new PooledKafkaProducerFactory(producerFactory)
+      val producerFactory = new BaseKafkaWorkerFactory(props, defaultTopic = Option("test"))
+      val pooledProducerFactory = new PooledKafkaWorkerFactory(producerFactory)
       val poolConfig = {
         val c = new GenericObjectPoolConfig
-        val maxNumProducers = 2
+        val maxNumProducers = 5
         c.setMaxTotal(maxNumProducers)
         c.setMaxIdle(maxNumProducers)
         c
       }
-      new GenericObjectPool[KafkaProducer](pooledProducerFactory, poolConfig)
+      new GenericObjectPool[KafkaWorker](pooledProducerFactory, poolConfig)
     })
 
     val topic = "test"
-    val sink = new RDDKafkaSink[(Int, String, Int)](source)
-    sink.sinkToKafka(pool, tuple => new ProducerRecord(topic, tuple._1 + "," + tuple._2 + "," + tuple._3))
+    val sink = new RDDKafkaSink[(Long, Int, String, Int)](source, pool)
+    sink.sinkToKafka(tuple => new ProducerRecord(topic, tuple._1 + "," + tuple._2 + "," + tuple._3 + "," + tuple._4))
 
     sc.stop()
   }

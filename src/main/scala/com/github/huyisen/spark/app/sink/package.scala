@@ -1,26 +1,19 @@
 package com.github.huyisen.spark.app
 
+import com.github.huyisen.spark.app.pool.KafkaWorker
 import org.apache.spark.rdd.RDD
 import org.apache.spark.streaming.dstream.DStream
 
 import scala.reflect.ClassTag
-
 import com.github.huyisen.spark.app.sink.hbase._
 import com.github.huyisen.spark.app.sink.kafka._
 import com.github.huyisen.spark.app.sink.solr._
+import com.github.huyisen.spark.app.wrap.{WrapperSingleton, WrapperVariable}
+import org.apache.commons.pool2.impl.GenericObjectPool
 
 /**
   *
   * Implicit conversions
-  *
-  * 1)[[DStream]] -> [[HBaseSink]]
-  * 2)[[RDD]] -> [[HBaseSink]]
-  *
-  * 3)[[DStream]] -> [[KafkaSink]]
-  * 4)[[RDD]] -> [[KafkaSink]]
-  *
-  * 5)[[DStream]] -> [[SolrSink]]
-  * 6)[[RDD]] -> [[SolrSink]]
   *
   * <p>Author: huyisen@gmail.com
   * <p>Date: 2017-07-11 22:54
@@ -28,30 +21,14 @@ import com.github.huyisen.spark.app.sink.solr._
   */
 package object sink {
 
-  /**
-    * Convert a [[DStream]] to a [[KafkaSink]] implicitly
-    *
-    * @param dStream [[DStream]] to be converted
-    * @return [[KafkaSink]] ready to write messages to Kafka
-    */
-  implicit def dStreamToKafkaSink[T: ClassTag, K, V](dStream: DStream[T]): KafkaSink[T] =
-    new DStreamKafkaSink[T](dStream)
+  implicit def dStreamToKafkaSink[T: ClassTag, K, V](dStream: DStream[T], pool: WrapperSingleton[GenericObjectPool[KafkaWorker]]): KafkaSink[T] =
+    new DStreamKafkaSink[T](dStream,pool)
 
-  /**
-    * Convert a [[RDD]] to a [[KafkaSink]] implicitly
-    *
-    * @param rdd [[RDD]] to be converted
-    * @return [[KafkaSink]] ready to write messages to Kafka
-    */
-  implicit def rddToKafkaSink[T: ClassTag, K, V](rdd: RDD[T]): KafkaSink[T] =
-    new RDDKafkaSink[T](rdd)
 
-  /**
-    * Convert a [[DStream]] to a [[HBaseSink]] implicitly
-    *
-    * @param dStream [[DStream]] to be converted
-    * @return [[HBaseSink]] ready to write messages to HBase
-    */
+  implicit def rddToKafkaSink[T: ClassTag, K, V](rdd: RDD[T], pool: WrapperSingleton[GenericObjectPool[KafkaWorker]]): KafkaSink[T] =
+    new RDDKafkaSink[T](rdd,pool)
+
+
   implicit def dStreamToHBaseSink[T: ClassTag, K, V](dStream: DStream[T]): HBaseSink[T] =
     new DStreamHBaseSink[T](dStream)
 

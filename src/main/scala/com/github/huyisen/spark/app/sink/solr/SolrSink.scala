@@ -13,13 +13,7 @@ import scala.reflect.ClassTag
   * <p>Version: 1.0
   */
 abstract class SolrSink[T: ClassTag] extends Serializable {
-
-  /**
-    * Sink a DStream or RDD to HBase
-    *
-    * @param config        properties for a SolrClient
-    * @param transformFunc a function used to transform values of T type into [[SolrInputDocument]]s
-    */
+  
   def sinkToSolr(
     config: Properties,
     transformFunc: T => SolrInputDocument
