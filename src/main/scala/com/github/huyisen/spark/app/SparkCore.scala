@@ -37,7 +37,7 @@ class SparkCore(args: Array[String]) extends RunTools with Serializable {
     val pool = WrapperVariable.apply({
 
       val props = new Properties()
-      props.put("bootstrap.servers", "qdsw31.urun:6667,qdsw32.urun:6667,qdsw34.urun:6667")
+      props.put("bootstrap.servers", "sdst104.urun:6667,sdst105.urun:6667,sdst106.urun:6667")
       props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer")
       props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer")
 

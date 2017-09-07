@@ -15,8 +15,8 @@ object SparkApp {
     */
   def main(args: Array[String]): Unit = {
     //    val mode = args.head
-    val mode = "Streaming"
-    //    val mode = "core"
+//    val mode = "Streaming"
+        val mode = "core"
     if ("Streaming".endsWith(mode)) {
       new SparkStreaming(args).run()
     } else {
