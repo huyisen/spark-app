@@ -11,30 +11,30 @@ import scala.reflect.ClassTag
   * <p>Date: 2017-09-07 00:30
   * <p>Version: 1.0
   */
-class SharedSingleton[T: ClassTag](constructor: => T) extends AnyRef with Serializable {
+class WrapperSingleton[T: ClassTag](constructor: => T) extends AnyRef with Serializable {
   val singletonUUID = UUID.randomUUID().toString
 
   @transient private lazy val instance: T = {
 
-    SharedSingleton.singletonPool.synchronized {
-      val singletonOption = SharedSingleton.singletonPool.get(singletonUUID)
+    WrapperSingleton.singletonPool.synchronized {
+      val singletonOption = WrapperSingleton.singletonPool.get(singletonUUID)
       if (singletonOption.isEmpty) {
-        SharedSingleton.singletonPool.put(singletonUUID, constructor)
+        WrapperSingleton.singletonPool.put(singletonUUID, constructor)
       }
     }
 
-    SharedSingleton.singletonPool.get(singletonUUID).get.asInstanceOf[T]
+    WrapperSingleton.singletonPool.get(singletonUUID).get.asInstanceOf[T]
   }
 
   def get = instance
 
 }
 
-object SharedSingleton {
+object WrapperSingleton {
 
   private val singletonPool = new TrieMap[String, Any]()
 
-  def apply[T: ClassTag](constructor: => T): SharedSingleton[T] = new SharedSingleton[T](constructor)
+  def apply[T: ClassTag](constructor: => T): WrapperSingleton[T] = new WrapperSingleton[T](constructor)
 
   def poolSize: Int = singletonPool.size
 

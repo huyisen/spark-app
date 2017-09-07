@@ -8,7 +8,7 @@ import scala.reflect.ClassTag
   * <p>Date: 2017-09-07 00:31
   * <p>Version: 1.0
   */
-class SharedVariable[T: ClassTag](constructor: => T) extends AnyRef with Serializable {
+class WrapperVariable[T: ClassTag](constructor: => T) extends AnyRef with Serializable {
 
   @transient private lazy val instance: T = constructor
 
@@ -16,8 +16,8 @@ class SharedVariable[T: ClassTag](constructor: => T) extends AnyRef with Seriali
 
 }
 
-object SharedVariable {
+object WrapperVariable {
 
-  def apply[T: ClassTag](constructor: => T): SharedVariable[T] = new SharedVariable[T](constructor)
+  def apply[T: ClassTag](constructor: => T): WrapperVariable[T] = new WrapperVariable[T](constructor)
 
 }

@@ -4,6 +4,7 @@ import java.util.Properties
 
 import com.github.huyisen.spark.app.pool.KafkaProducer
 import com.github.huyisen.spark.app.util.KafkaProducerCache
+import com.github.huyisen.spark.app.wrap.WrapperVariable
 import org.apache.commons.pool2.impl.GenericObjectPool
 import org.apache.kafka.clients.producer.{Callback, ProducerRecord}
 import org.apache.spark.broadcast.Broadcast
@@ -22,18 +23,20 @@ class RDDKafkaSink[T: ClassTag](@transient private val rdd: RDD[T])
   /**
     * Sink a DStream or RDD to Kafka
     *
-    * @param producerConfig properties for a KafkaProducer
+    * @param pool properties for a KafkaProducer
     * @param transformFunc  a function used to transform values of T type into [[ProducerRecord]]s
     * @param callback       an optional [[Callback]] to be called after each write, default value is None.
     */
-  override def sinkToKafka[K, V](
-    producerConfig: Properties,
-    transformFunc: (T) => ProducerRecord[K, V],
-    callback: Option[Callback]
+  override def sinkToKafka(
+                            pool: WrapperVariable[GenericObjectPool[KafkaProducer]],
+                            transformFunc: (T) => ProducerRecord[String, String],
+                            callback: Option[Callback]
   ): Unit = rdd.foreachPartition(partition => {
-    val producer = KafkaProducerCache.getProducer[K, V](producerConfig)
+
+    val producer = pool.get.borrowObject()
     partition
       .map(transformFunc)
-      .foreach(record => producer.send(record, callback.orNull))
+      .foreach(record => producer.send(record, callback))
+    pool.get.returnObject(producer)
   })
 }

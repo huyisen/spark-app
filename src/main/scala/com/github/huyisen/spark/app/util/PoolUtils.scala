@@ -14,10 +14,10 @@ import org.apache.commons.pool2.impl.{GenericObjectPool, GenericObjectPoolConfig
 object PoolUtils {
 
   private[app] def createKafkaProducerPool(
-    brokerList: String,
+    config: Properties,
     topic: String
   ): GenericObjectPool[KafkaProducer] = {
-    val producerFactory = new BaseKafkaProducerFactory(brokerList, defaultTopic = Option(topic))
+    val producerFactory = new BaseKafkaProducerFactory(config, defaultTopic = Option(topic))
     val pooledProducerFactory = new PooledKafkaProducerFactory(producerFactory)
     val poolConfig = {
       val c = new GenericObjectPoolConfig
