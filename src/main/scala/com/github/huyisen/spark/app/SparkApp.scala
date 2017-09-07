@@ -29,7 +29,7 @@ class SparkStreaming(args: Array[String]) extends RunTools with Serializable {
 
     val sparkConf = new SparkConf()
 //      .setMaster("local[3]")
-      .setAppName(s"SparkStream-[${Test}]-App")
+      .setAppName(s"SparkStream-[Test]-App")
       .set("spark.streaming.backpressure.enabled", "true")
       .set("spark.streaming.kafka.maxRatePerPartition", "10")
       .set("spark.streaming.stopGracefullyOnShutdown", "true")
