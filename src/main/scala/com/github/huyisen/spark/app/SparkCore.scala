@@ -45,7 +45,7 @@ class SparkCore(args: Array[String]) extends RunTools with Serializable {
       val pooledProducerFactory = new PooledKafkaProducerFactory(producerFactory)
       val poolConfig = {
         val c = new GenericObjectPoolConfig
-        val maxNumProducers = 10
+        val maxNumProducers = 2
         c.setMaxTotal(maxNumProducers)
         c.setMaxIdle(maxNumProducers)
         c

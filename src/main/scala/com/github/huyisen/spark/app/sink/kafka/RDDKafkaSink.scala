@@ -1,13 +1,9 @@
 package com.github.huyisen.spark.app.sink.kafka
 
-import java.util.Properties
-
 import com.github.huyisen.spark.app.pool.KafkaProducer
-import com.github.huyisen.spark.app.util.KafkaProducerCache
 import com.github.huyisen.spark.app.wrap.WrapperVariable
 import org.apache.commons.pool2.impl.GenericObjectPool
 import org.apache.kafka.clients.producer.{Callback, ProducerRecord}
-import org.apache.spark.broadcast.Broadcast
 import org.apache.spark.rdd.RDD
 
 import scala.reflect.ClassTag
@@ -23,17 +19,18 @@ class RDDKafkaSink[T: ClassTag](@transient private val rdd: RDD[T])
   /**
     * Sink a DStream or RDD to Kafka
     *
-    * @param pool properties for a KafkaProducer
-    * @param transformFunc  a function used to transform values of T type into [[ProducerRecord]]s
-    * @param callback       an optional [[Callback]] to be called after each write, default value is None.
+    * @param pool          properties for a KafkaProducer
+    * @param transformFunc a function used to transform values of T type into [[ProducerRecord]]s
+    * @param callback      an optional [[Callback]] to be called after each write, default value is None.
     */
   override def sinkToKafka(
                             pool: WrapperVariable[GenericObjectPool[KafkaProducer]],
                             transformFunc: (T) => ProducerRecord[String, String],
                             callback: Option[Callback]
-  ): Unit = rdd.foreachPartition(partition => {
+                          ): Unit = rdd.foreachPartition(partition => {
 
     val producer = pool.get.borrowObject()
+    println("producer ==>" + producer)
     partition
       .map(transformFunc)
       .foreach(record => producer.send(record, callback))
