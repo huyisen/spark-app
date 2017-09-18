@@ -2,10 +2,7 @@ package com.github.huyisen.spark.app
 
 import java.util.Properties
 
-import com.github.huyisen.spark.app.pool.{BaseKafkaWorkerFactory, KafkaWorker, PooledKafkaWorkerFactory}
 import com.github.huyisen.spark.app.sink.kafka.RDDKafkaSink
-import com.github.huyisen.spark.app.wrap.WrapperSingleton
-import org.apache.commons.pool2.impl.{GenericObjectPool, GenericObjectPoolConfig}
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.spark.{SparkConf, SparkContext}
 
@@ -36,26 +33,13 @@ class SparkCore(args: Array[String]) extends RunTools with Serializable {
 
     val brokers = "node3.com:6667"
 
-    val pool = WrapperSingleton.apply({
-      val props = new Properties()
-      props.put("bootstrap.servers", brokers)
-      props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer")
-      props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer")
-
-      val producerFactory = new BaseKafkaWorkerFactory(props, defaultTopic = Option("test"))
-      val pooledProducerFactory = new PooledKafkaWorkerFactory(producerFactory)
-      val poolConfig = {
-        val c = new GenericObjectPoolConfig
-        val maxNumProducers = 5
-        c.setMaxTotal(maxNumProducers)
-        c.setMaxIdle(maxNumProducers)
-        c
-      }
-      new GenericObjectPool[KafkaWorker](pooledProducerFactory, poolConfig)
-    })
+    val props = new Properties()
+    props.put("bootstrap.servers", brokers)
+    props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer")
+    props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer")
 
     val topic = "test"
-    val sink = new RDDKafkaSink[(Long, Int, String, Int)](source, pool)
+    val sink = new RDDKafkaSink[(Long, Int, String, Int)](source, props)
     sink.sinkToKafka(tuple => new ProducerRecord(topic, tuple._1 + "," + tuple._2 + "," + tuple._3 + "," + tuple._4))
 
     sc.stop()

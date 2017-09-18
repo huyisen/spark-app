@@ -1,5 +1,7 @@
 package com.github.huyisen.spark.app
 
+import java.util.Properties
+
 import com.github.huyisen.spark.app.pool.KafkaWorker
 import org.apache.spark.rdd.RDD
 import org.apache.spark.streaming.dstream.DStream
@@ -21,12 +23,12 @@ import org.apache.commons.pool2.impl.GenericObjectPool
   */
 package object sink {
 
-  implicit def dStreamToKafkaSink[T: ClassTag, K, V](dStream: DStream[T], pool: WrapperSingleton[GenericObjectPool[KafkaWorker]]): KafkaSink[T] =
-    new DStreamKafkaSink[T](dStream,pool)
+  implicit def dStreamToKafkaSink[T: ClassTag, K, V](dStream: DStream[T], config: Properties): KafkaSink[T] =
+    new DStreamKafkaSink[T](dStream,config)
 
 
-  implicit def rddToKafkaSink[T: ClassTag, K, V](rdd: RDD[T], pool: WrapperSingleton[GenericObjectPool[KafkaWorker]]): KafkaSink[T] =
-    new RDDKafkaSink[T](rdd,pool)
+  implicit def rddToKafkaSink[T: ClassTag, K, V](rdd: RDD[T],config: Properties): KafkaSink[T] =
+    new RDDKafkaSink[T](rdd,config)
 
 
   implicit def dStreamToHBaseSink[T: ClassTag, K, V](dStream: DStream[T]): HBaseSink[T] =

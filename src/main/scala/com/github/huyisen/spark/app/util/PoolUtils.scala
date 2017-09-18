@@ -17,7 +17,7 @@ object PoolUtils {
     config: Properties,
     topic: String
   ): GenericObjectPool[KafkaWorker] = {
-    val producerFactory = new BaseKafkaWorkerFactory(config, defaultTopic = Option(topic))
+    val producerFactory = new BaseKafkaWorkerFactory(config)
     val pooledProducerFactory = new PooledKafkaWorkerFactory(producerFactory)
     val poolConfig = {
       val c = new GenericObjectPoolConfig
